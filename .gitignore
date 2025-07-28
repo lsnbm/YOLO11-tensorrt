@@ -1,0 +1,15 @@
+# 忽略TensorRT库
+TensorRT-*/
+
+# 忽略OpenCV库
+opencv/
+
+# 忽略大型DLL和PDB文件
+*.dll
+*.pdb
+*.onnx  # 模型文件
+
+# 忽略构建产物
+build/
+bin/
+lib/

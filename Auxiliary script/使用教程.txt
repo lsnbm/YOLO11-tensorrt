@@ -1,0 +1,43 @@
+1：获取onnx,可以从pt转换为onnx：
+	
+您可以通过 API 导出 onnx 模型，并同时在 ONNX 模型中添加 bbox 解码器等后处理。ultralyticsNMS
+
+python export-det.py \
+--weights yolov8s.pt \
+--iou-thres 0.65 \
+--conf-thres 0.25 \
+--topk 100 \
+--opset 11 \
+--sim \
+--input-shape 1 3 640 640 \
+--device cuda:0
+
+python export-det.py --weights yolov8s.pt --iou-thres 0.65 --conf-thres 0.25 --topk 100 --opset 11 --sim --input-shape 1 3 640 640 --device cuda:0
+
+所有参数的描述
+--weights：您训练的 PyTorch 模型。
+--iou-thres：NMS 插件的 IOU 阈值。		//如果两个检测框的重叠区域（IoU）超过了 65% (0.65)，NMS 算法就会认为它们在检测同一个物体，并会舍弃掉置信度较低的那个。
+--conf-thres：NMS 插件的置信度阈值。	//置信度低于 25% (0.25) 的检测结果，都直接丢弃
+--topk：检测框的最大数量。
+--opset：ONNX opset 版本，默认值为 11。
+--sim：是否简化 onnx 模型。
+--input-shape：输入模型的形状，应为 4 个维度。
+--device：CUDA 设备导出引擎。
+您将获得一个 onnx 模型，其前缀与输入权重相同。
+
+
+
+2:转换为tensorrt引擎
+ python build.py --weights yolo11n.onnx --iou-thres 0.65 --conf-thres 0.25 --topk 100 --fp16 --device cuda:0
+推荐使用：
+trtexec --onnx=yolo11n.onnx --saveEngine=yolo11n.engine --fp16
+
+trtexec参数解释：
+
+onnx导出为engine文件 使用fp16半精度量化
+
+
+
+
+
+

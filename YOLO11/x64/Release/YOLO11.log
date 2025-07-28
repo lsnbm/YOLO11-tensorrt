@@ -1,0 +1,23 @@
+﻿cl : 命令行  warning D9025: 正在重写“/sdl”(用“/GS-”)
+  main.cpp
+C:\Users\liaoshuang\Desktop\YOLO11\opencv\build\include\opencv2\imgcodecs.hpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“main.cpp”)
+  
+C:\Users\liaoshuang\Desktop\YOLO11\YOLO11\main.cpp(88,56): warning C4244: “*=”: 从“const int64_t”转换到“int”，可能丢失数据
+C:\Users\liaoshuang\Desktop\YOLO11\YOLO11\main.cpp(232,24): warning C4244: “=”: 从“const int”转换到“float”，可能丢失数据
+C:\Users\liaoshuang\Desktop\YOLO11\YOLO11\main.cpp(233,23): warning C4244: “=”: 从“const int”转换到“float”，可能丢失数据
+C:\Users\liaoshuang\Desktop\YOLO11\YOLO11\main.cpp(248,65): warning C4244: “参数”: 从“const int64_t”转换到“_Tp”，可能丢失数据
+C:\Users\liaoshuang\Desktop\YOLO11\YOLO11\main.cpp(248,65): warning C4244:         with
+C:\Users\liaoshuang\Desktop\YOLO11\YOLO11\main.cpp(248,65): warning C4244:         [
+C:\Users\liaoshuang\Desktop\YOLO11\YOLO11\main.cpp(248,65): warning C4244:             _Tp=int
+C:\Users\liaoshuang\Desktop\YOLO11\YOLO11\main.cpp(248,65): warning C4244:         ]
+C:\Users\liaoshuang\Desktop\YOLO11\YOLO11\main.cpp(248,43): warning C4244: “参数”: 从“const int64_t”转换到“_Tp”，可能丢失数据
+C:\Users\liaoshuang\Desktop\YOLO11\YOLO11\main.cpp(248,43): warning C4244:         with
+C:\Users\liaoshuang\Desktop\YOLO11\YOLO11\main.cpp(248,43): warning C4244:         [
+C:\Users\liaoshuang\Desktop\YOLO11\YOLO11\main.cpp(248,43): warning C4244:             _Tp=int
+C:\Users\liaoshuang\Desktop\YOLO11\YOLO11\main.cpp(248,43): warning C4244:         ]
+  正在生成代码
+  Previous IPDB not found, fall back to full compilation.
+  All 1242 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  已完成代码的生成
+  YOLO11.vcxproj -> C:\Users\liaoshuang\Desktop\YOLO11\x64\Release\YOLO11.exe

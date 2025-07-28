@@ -1,0 +1,5 @@
+请自行官网
+下载cuda和cudnn库
+下载tensor库
+下载opencv库
+放到解决方案目录

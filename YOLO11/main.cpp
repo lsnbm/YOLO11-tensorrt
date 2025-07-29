@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include "Take a screenshot.hpp"
 
-// --- Á´½Ó¿â (¸ù¾İÄúµÄÒªÇóÍêÕû±£Áô) ---
+
 #pragma comment(lib, "Shcore.lib")
 #pragma comment(lib, "nvinfer_10.lib")
 #pragma comment(lib, "nvinfer_dispatch_10.lib")
@@ -70,7 +70,7 @@
 #pragma comment(lib, "nvrtc-builtins_static.lib")
 #pragma comment(lib, "OpenCL.lib")
 #pragma comment(lib, "opencv_world4120 .lib")
-// --- Á´½Ó¿â½áÊø ---
+// --- é“¾æ¥åº“ç»“æŸ ---
 
 #define CHECK(call)                                                                                                    \
     do {                                                                                                               \
@@ -82,7 +82,7 @@
         }                                                                                                              \
     } while (0)
 
-// --- ¸¨Öúº¯ÊıºÍ½á¹¹Ìå ---
+// --- è¾…åŠ©å‡½æ•°å’Œç»“æ„ä½“ ---
 inline int get_size_by_dims(const nvinfer1::Dims& dims) {
 	int size = 1;
 	for (int i = 0; i < dims.nbDims; ++i) size *= dims.d[i];
@@ -94,9 +94,9 @@ inline float clamp(float val, float min, float max) {
 
 struct Binding { size_t size = 1, dsize = 1; nvinfer1::Dims dims; std::string name; };
 struct Object {
-	cv::Rect_<float> rect;  // ´æ´¢Ä¿±êµÄ¾ØĞÎ¿òĞÅÏ¢
-	int              label; // Ä¿±êµÄÀà±ğ±êÇ©
-	float            prob;  // Ä¿±êµÄÖÃĞÅ¶È
+	cv::Rect_<float> rect;  // å­˜å‚¨ç›®æ ‡çš„çŸ©å½¢æ¡†ä¿¡æ¯
+	int              label; // ç›®æ ‡çš„ç±»åˆ«æ ‡ç­¾
+	float            prob;  // ç›®æ ‡çš„ç½®ä¿¡åº¦
 };
 struct PreParam { float ratio = 1.0f, dw = 0.0f, dh = 0.0f, height = 0, width = 0; };
 
@@ -106,15 +106,15 @@ class Logger : public nvinfer1::ILogger {
 	}
 };
 
-// --- YOLOv11 Àà¶¨Òå ---
+// --- YOLOv11 ç±»å®šä¹‰ ---
 class YOLO11 {
 public:
-	// ¹¹Ôìº¯Êı£º³õÊ¼»¯ºÍ¼ÓÔØÄ£ĞÍ
+	// æ„é€ å‡½æ•°ï¼šåˆå§‹åŒ–å’ŒåŠ è½½æ¨¡å‹
 	explicit YOLO11(const std::string& engine_file_path) {
 		runtime = nullptr; engine = nullptr; context = nullptr; stream = nullptr;
 
 		std::ifstream file(engine_file_path, std::ios::binary);
-		if (!file.is_open()) throw std::runtime_error("ÎŞ·¨´ò¿ª engine ÎÄ¼ş: " + engine_file_path);
+		if (!file.is_open()) throw std::runtime_error("æ— æ³•æ‰“å¼€ engine æ–‡ä»¶: " + engine_file_path);
 
 		file.seekg(0, std::ios::end);
 		size_t size = file.tellg();
@@ -127,7 +127,7 @@ public:
 		runtime = nvinfer1::createInferRuntime(gLogger);
 		engine = runtime->deserializeCudaEngine(trtModelStream.data(), size);
 		context = engine->createExecutionContext();
-		if (!context) throw std::runtime_error("TensorRT ÒıÇæ³õÊ¼»¯Ê§°Ü¡£");
+		if (!context) throw std::runtime_error("TensorRT å¼•æ“åˆå§‹åŒ–å¤±è´¥ã€‚");
 
 		CHECK(cudaStreamCreate(&stream));
 
@@ -137,7 +137,7 @@ public:
 			binding.name = name;
 			binding.dims = engine->getProfileShape(name, 0, nvinfer1::OptProfileSelector::kMAX);
 			binding.size = get_size_by_dims(binding.dims);
-			binding.dsize = sizeof(float); // ¼ÙÉèÊı¾İÀàĞÍÎª float
+			binding.dsize = sizeof(float); // å‡è®¾æ•°æ®ç±»å‹ä¸º float
 
 			if (engine->getTensorIOMode(name) == nvinfer1::TensorIOMode::kINPUT) {
 				input_bindings.push_back(binding);
@@ -148,19 +148,19 @@ public:
 		}
 	}
 
-	// Îö¹¹º¯Êı£ºÊÍ·ÅËùÓĞ×ÊÔ´
+	// ææ„å‡½æ•°ï¼šé‡Šæ”¾æ‰€æœ‰èµ„æº
 	~YOLO11() {
 		if (stream) cudaStreamDestroy(stream);
 		for (void* ptr : host_ptrs) CHECK(cudaFreeHost(ptr));
 		for (void* ptr : device_ptrs) CHECK(cudaFree(ptr));
 
-		// TensorRT 10 Ê¹ÓÃ delete ÊÍ·Å¶ÔÏó
+		// TensorRT 10 ä½¿ç”¨ delete é‡Šæ”¾å¯¹è±¡
 		if (context) delete context;
 		if (engine) delete engine;
 		if (runtime) delete runtime;
 	}
 
-	// ¸ß²ã¼ì²â½Ó¿Ú
+	// é«˜å±‚æ£€æµ‹æ¥å£
 	void detect(const cv::Mat& image, std::vector<Object>& objs, long long& inference_ms) {
 		copy_from_Mat(image);
 		auto start = std::chrono::steady_clock::now();
@@ -170,7 +170,7 @@ public:
 		postprocess(objs);
 	}
 
-	// ´´½¨ÄÚ´æ¹ÜµÀ²¢Ô¤ÈÈ
+	// åˆ›å»ºå†…å­˜ç®¡é“å¹¶é¢„çƒ­
 	void make_pipe(bool warmup = true) {
 		for (const auto& binding : input_bindings) {
 			void* d_ptr;
@@ -189,17 +189,17 @@ public:
 		}
 
 		if (warmup) {
-			std::cout << "Ä£ĞÍÔ¤ÈÈÖĞ..." << std::endl;
+			std::cout << "æ¨¡å‹é¢„çƒ­ä¸­..." << std::endl;
 			std::vector<char> dummy_input(input_bindings[0].size * input_bindings[0].dsize, 0);
 			for (int i = 0; i < 10; i++) {
 				CHECK(cudaMemcpy(device_ptrs[0], dummy_input.data(), dummy_input.size(), cudaMemcpyHostToDevice));
 				infer();
 			}
-			std::cout << "Ô¤ÈÈÍê³É¡£" << std::endl;
+			std::cout << "é¢„çƒ­å®Œæˆã€‚" << std::endl;
 		}
 	}
 
-	// ¾²Ì¬»æÖÆº¯Êı
+	// é™æ€ç»˜åˆ¶å‡½æ•°
 	static void draw_objects(const cv::Mat& image, const std::vector<Object>& objs, const std::vector<std::string>& CLASS_NAMES, const std::vector<std::vector<unsigned int>>& COLORS) {
 		for (const auto& obj : objs) {
 			if (obj.label < 0 || static_cast<size_t>(obj.label) >= CLASS_NAMES.size()) continue;
@@ -217,7 +217,7 @@ public:
 	}
 
 private:
-	// Í¼ÏñÔ¤´¦Àí
+	// å›¾åƒé¢„å¤„ç†
 	void letterbox(const cv::Mat& image, cv::Mat& out, const cv::Size& new_shape) {
 		float r = (static_cast<float>(new_shape.height) / image.rows) < (static_cast<float>(new_shape.width) / image.cols)
 			? (static_cast<float>(new_shape.height) / image.rows) : (static_cast<float>(new_shape.width) / image.cols);
@@ -241,7 +241,7 @@ private:
 		cv::dnn::blobFromImage(tmp, out, 1.0 / 255.0, cv::Size(), cv::Scalar(), true, false, CV_32F);
 	}
 
-	// ¸´ÖÆÊı¾İµ½Éè±¸
+	// å¤åˆ¶æ•°æ®åˆ°è®¾å¤‡
 	void copy_from_Mat(const cv::Mat& image) {
 		cv::Mat nchw;
 		const auto& in_binding = input_bindings[0];
@@ -251,7 +251,7 @@ private:
 		CHECK(cudaMemcpyAsync(device_ptrs[0], nchw.ptr<float>(), nchw.total() * nchw.elemSize(), cudaMemcpyHostToDevice, stream));
 	}
 
-	// Ö´ĞĞÍÆÀí
+	// æ‰§è¡Œæ¨ç†
 	void infer() {
 		context->enqueueV3(stream);
 		for (size_t i = 0; i < output_bindings.size(); ++i) {
@@ -261,7 +261,7 @@ private:
 		cudaStreamSynchronize(stream);
 	}
 
-	// ½á¹ûºó´¦Àí
+	// ç»“æœåå¤„ç†
 	void postprocess(std::vector<Object>& objs) {
 		objs.clear();
 		int* num_dets = static_cast<int*>(host_ptrs[0]);
@@ -286,7 +286,7 @@ private:
 		}
 	}
 
-	// ³ÉÔ±±äÁ¿
+	// æˆå‘˜å˜é‡
 	Logger gLogger;
 	nvinfer1::IRuntime* runtime;
 	nvinfer1::ICudaEngine* engine;
@@ -300,42 +300,42 @@ private:
 	PreParam pparam;
 };
 
-// --- Àà±ğºÍÑÕÉ«³£Á¿ ---
+// --- ç±»åˆ«å’Œé¢œè‰²å¸¸é‡ ---
 static const std::vector<std::string> CLASS_NAMES = { "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch", "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush" };
 static const std::vector<std::vector<unsigned int>> COLORS = { {100, 114, 189}, {217, 83, 25}, {237, 177, 32}, {126, 47, 142}, {119, 172, 48}, {77, 190, 238}, {162, 20, 47}, {76, 76, 76}, {153, 153, 153}, {255, 0, 0}, {255, 128, 0}, {191, 191, 0}, {0, 255, 0}, {0, 0, 255}, {170, 0, 255}, {85, 85, 0}, {85, 170, 0}, {85, 255, 0}, {170, 85, 0}, {170, 170, 0}, {170, 255, 0}, {255, 85, 0}, {255, 170, 0}, {255, 255, 0}, {0, 85, 128}, {0, 170, 128}, {0, 255, 128}, {85, 0, 128}, {85, 85, 128}, {85, 170, 128}, {85, 255, 128}, {170, 0, 128}, {170, 85, 128}, {170, 170, 128}, {170, 255, 128}, {255, 0, 128}, {255, 85, 128}, {255, 170, 128}, {255, 255, 128}, {0, 85, 255}, {0, 170, 255}, {0, 255, 255}, {85, 0, 255}, {85, 85, 255}, {85, 170, 255}, {85, 255, 255}, {170, 0, 255}, {170, 85, 255}, {170, 170, 255}, {170, 255, 255}, {255, 0, 255}, {255, 85, 255}, {255, 170, 255}, {85, 0, 0}, {128, 0, 0}, {170, 0, 0}, {212, 0, 0}, {255, 0, 0}, {0, 43, 0}, {0, 85, 0}, {0, 128, 0}, {0, 170, 0}, {0, 212, 0}, {0, 255, 0}, {0, 0, 43}, {0, 0, 85}, {0, 0, 128}, {0, 0, 170}, {0, 0, 212}, {0, 0, 255}, {0, 0, 0}, {36, 36, 36}, {73, 73, 73}, {109, 109, 109}, {146, 146, 146}, {182, 182, 182}, {219, 219, 219}, {0, 114, 189}, {80, 183, 189}, {128, 128, 0} };
 
 
 
 int main() {
-	// // ³õÊ¼»¯ CUDA ºÍ YOLO Ä£ĞÍ
+	// // åˆå§‹åŒ– CUDA å’Œ YOLO æ¨¡å‹
 	cudaSetDevice(0);
 	YOLO11* yolo = new YOLO11("trtexec-yolo11n.engine");
 	yolo->make_pipe(true);
 
-	// // ¶¨ÒåÍ¼Ïñ´¦ÀíÏà¹ØµÄ±äÁ¿
+	// // å®šä¹‰å›¾åƒå¤„ç†ç›¸å…³çš„å˜é‡
 	cv::Mat image;
 	std::vector<Object> objs;
 	long long inference_ms = 0;
 	int mode_selection = 0;   
 
-	// --- Ä£Ê½Ñ¡Ôñ ---
-	std::cout << "   1: ´ÓÊÓÆµÎÄ¼ş»òÉãÏñÍ·½øĞĞ¼ì²â" << std::endl;
-	std::cout << "   2: ´ÓÊµÊ±ÆÁÄ»²¶»ñ½øĞĞ¼ì²â" << std::endl;
-	std::cout << "ÇëÊäÈëÑ¡Ïî (1 »ò 2): ";
+	// --- æ¨¡å¼é€‰æ‹© ---
+	std::cout << "   1: ä»è§†é¢‘æ–‡ä»¶æˆ–æ‘„åƒå¤´è¿›è¡Œæ£€æµ‹" << std::endl;
+	std::cout << "   2: ä»å®æ—¶å±å¹•æ•è·è¿›è¡Œæ£€æµ‹" << std::endl;
+	std::cout << "è¯·è¾“å…¥é€‰é¡¹ (1 æˆ– 2): ";
 	std::cin >> mode_selection; 
 
 	try {
-		// --- ¸ù¾İÑ¡ÔñµÄÄ£Ê½Ö´ĞĞ ---
+		// --- æ ¹æ®é€‰æ‹©çš„æ¨¡å¼æ‰§è¡Œ ---
 		switch (mode_selection) { 
 		case 1: {
-			// --- Ä£Ê½ 1: ÊÓÆµÎÄ¼ş»òÉãÏñÍ· ---
-			std::cout << "ÒÑÑ¡ÔñÄ£Ê½ 1: ÊÓÆµ/ÉãÏñÍ·¼ì²â" << std::endl;
+			// --- æ¨¡å¼ 1: è§†é¢‘æ–‡ä»¶æˆ–æ‘„åƒå¤´ ---
+			std::cout << "å·²é€‰æ‹©æ¨¡å¼ 1: è§†é¢‘/æ‘„åƒå¤´æ£€æµ‹" << std::endl;
 			cv::VideoCapture cap;
-			// // ³¢ÊÔ´ò¿ªÊÓÆµÎÄ¼ş£¬Èç¹ûÊ§°ÜÔò³¢ÊÔ´ò¿ªÉãÏñÍ·
+			// // å°è¯•æ‰“å¼€è§†é¢‘æ–‡ä»¶ï¼Œå¦‚æœå¤±è´¥åˆ™å°è¯•æ‰“å¼€æ‘„åƒå¤´
 			if (!cap.open("../shiping.mp4")) {
-				std::cout << "ÎŞ·¨´ò¿ªÊÓÆµÎÄ¼ş£¬³¢ÊÔ´ò¿ªÄ¬ÈÏÉãÏñÍ·..." << std::endl;
+				std::cout << "æ— æ³•æ‰“å¼€è§†é¢‘æ–‡ä»¶ï¼Œå°è¯•æ‰“å¼€é»˜è®¤æ‘„åƒå¤´..." << std::endl;
 				if (!cap.open(0)) {
-					std::cerr << "´íÎó: ÊÓÆµºÍÉãÏñÍ·¶¼ÎŞ·¨´ò¿ª£¡" << std::endl;
+					std::cerr << "é”™è¯¯: è§†é¢‘å’Œæ‘„åƒå¤´éƒ½æ— æ³•æ‰“å¼€ï¼" << std::endl;
 					break;
 				}
 			}
@@ -343,73 +343,73 @@ int main() {
 			while (cap.read(image)) {
 
 				if (image.empty()) break;
-				// // °´ 'Q' ¼üÍË³öÑ­»·
+				// // æŒ‰ 'Q' é”®é€€å‡ºå¾ªç¯
 				if (GetAsyncKeyState('Q') & 0x8000) {break;}
 
 
-				// // Ö´ĞĞ¼ì²âºÍ»æÖÆ£¬inference_ms ÔÚÕâÀï±»ÕıÈ·µØÓÃÓÚ·µ»ØºÄÊ±
+				// // æ‰§è¡Œæ£€æµ‹å’Œç»˜åˆ¶ï¼Œinference_ms åœ¨è¿™é‡Œè¢«æ­£ç¡®åœ°ç”¨äºè¿”å›è€—æ—¶
 				yolo->detect(image, objs, inference_ms);
 				YOLO11::draw_objects(image, objs, CLASS_NAMES, COLORS);
 
-				printf("¼ì²âµ½ %zu ¸öÄ¿±ê£¬ºÄÊ± %lld ºÁÃë¡£\n", objs.size(), inference_ms);
-				// // µ÷ÓÃ OpenCV ÏÔÊ¾½Ó¿Ú
-				cv::imshow("OpenCV ´°¿Ú", image);
+				printf("æ£€æµ‹åˆ° %zu ä¸ªç›®æ ‡ï¼Œè€—æ—¶ %lld æ¯«ç§’ã€‚\n", objs.size(), inference_ms);
+				// // è°ƒç”¨ OpenCV æ˜¾ç¤ºæ¥å£
+				cv::imshow("OpenCV çª—å£", image);
 
 
-				cv::waitKey(1);//±ØĞëÓëimshowÅäºÏÊ¹ÓÃ
+				cv::waitKey(1);//å¿…é¡»ä¸imshowé…åˆä½¿ç”¨
 			}
 			break;
 		}
 
 		case 2: {
-			// --- Ä£Ê½ 2: ÊµÊ±ÆÁÄ»²¶»ñ ---
-			std::cout << "ÒÑÑ¡ÔñÄ£Ê½ 2: ÊµÊ±ÆÁÄ»¼ì²â¡£°´ 'Q' ¼üÍË³ö¡£" << std::endl;
+			// --- æ¨¡å¼ 2: å®æ—¶å±å¹•æ•è· ---
+			std::cout << "å·²é€‰æ‹©æ¨¡å¼ 2: å®æ—¶å±å¹•æ£€æµ‹ã€‚æŒ‰ 'Q' é”®é€€å‡ºã€‚" << std::endl;
 
-			// // ³õÊ¼»¯ÆÁÄ»²¶»ñÆ÷
+			// // åˆå§‹åŒ–å±å¹•æ•è·å™¨
 			ScreenCapturer capturer;
 			if (!capturer.is_valid()) {
-				std::cerr << "´íÎó: ÎŞ·¨³õÊ¼»¯ÆÁÄ»²¶»ñÆ÷¡£" << std::endl;
+				std::cerr << "é”™è¯¯: æ— æ³•åˆå§‹åŒ–å±å¹•æ•è·å™¨ã€‚" << std::endl;
 				return -1;
 			}
 
 			while (true) {
-				// // °´ 'Q' ¼üÍË³öÑ­»·
+				// // æŒ‰ 'Q' é”®é€€å‡ºå¾ªç¯
 				if (GetAsyncKeyState('Q') & 0x8000) {break;}
 
-				// // ²¶»ñÒ»Ö¡ÆÁÄ»
+				// // æ•è·ä¸€å¸§å±å¹•
 				image = capturer.capture_frame();
 
 				if (image.empty()) {continue;}
 
-				 // ½«²¶»ñµÄ4Í¨µÀBGRAÍ¼Ïñ×ª»»ÎªYOLOÄ£ĞÍĞèÒªµÄ3Í¨µÀBGRÍ¼Ïñ
+				 // å°†æ•è·çš„4é€šé“BGRAå›¾åƒè½¬æ¢ä¸ºYOLOæ¨¡å‹éœ€è¦çš„3é€šé“BGRå›¾åƒ
 				cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
 
-				 // Ö´ĞĞ¼ì²âºÍ»æÖÆ
+				 // æ‰§è¡Œæ£€æµ‹å’Œç»˜åˆ¶
 				yolo->detect(image, objs, inference_ms);
 				YOLO11::draw_objects(image, objs, CLASS_NAMES, COLORS);
-				printf("¼ì²âµ½ %zu ¸öÄ¿±ê£¬ºÄÊ± %lld ºÁÃë¡£\n", objs.size(), inference_ms);
+				printf("æ£€æµ‹åˆ° %zu ä¸ªç›®æ ‡ï¼Œè€—æ—¶ %lld æ¯«ç§’ã€‚\n", objs.size(), inference_ms);
 
 	
-				show_image_in_win32_window("Win32 ´°¿Ú - ÊµÊ±ÆÁÄ»¼ì²â", image);
+				show_image_in_win32_window("Win32 çª—å£ - å®æ—¶å±å¹•æ£€æµ‹", image);
 			}
 			break;
 		}
 
 		default: {
-			// --- ÎŞĞ§Ñ¡Ïî ---
-			std::cerr << "ÊäÈëÎŞĞ§¡£ÇëÊäÈë 1 »ò 2¡£" << std::endl;
+			// --- æ— æ•ˆé€‰é¡¹ ---
+			std::cerr << "è¾“å…¥æ— æ•ˆã€‚è¯·è¾“å…¥ 1 æˆ– 2ã€‚" << std::endl;
 			break;
 		}
 		}
 	}
 	catch (const std::exception& e) {
-		std::cerr << "³ÌĞò·¢ÉúÒì³£: " << e.what() << std::endl;
+		std::cerr << "ç¨‹åºå‘ç”Ÿå¼‚å¸¸: " << e.what() << std::endl;
 	}
 
-	// // ÇåÀí×ÊÔ´
+	// // æ¸…ç†èµ„æº
 	delete yolo;
-	cv::destroyAllWindows(); // // ¹Ø±ÕËùÓĞÓÉ OpenCV ´´½¨µÄ´°¿Ú
+	cv::destroyAllWindows(); // // å…³é—­æ‰€æœ‰ç”± OpenCV åˆ›å»ºçš„çª—å£
 
-	system("pause"); // // ÔÚÍË³öÇ°ÔİÍ££¬·½±ã²é¿´¿ØÖÆÌ¨Êä³ö
+	system("pause"); // // åœ¨é€€å‡ºå‰æš‚åœï¼Œæ–¹ä¾¿æŸ¥çœ‹æ§åˆ¶å°è¾“å‡º
 	return 0;
 }
